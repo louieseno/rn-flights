@@ -12,7 +12,7 @@ export interface Flight {
   stopAirports: string[];
   emissionsKg?: number;
   emissionsTag?: string;
-  emissionsLevel?: 'high' | 'avg' | 'low';
+  emissionsLevel?: "high" | "avg" | "low";
   price: string;
   priceRaw?: number;
   isTopFlight?: boolean;

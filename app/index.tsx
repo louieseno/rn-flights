@@ -1,14 +1,23 @@
-import { useForm, Controller } from "react-hook-form";
-import { View, Text, ActivityIndicator, StyleSheet, FlatList, TextInput, Button } from "react-native";
-import { useState } from "react";
 import DateInput from "@/components/DateInput";
-import { Flight } from "@/model/Flight";
+import LocationAutocomplete from "@/components/LocationAutoComplete";
 import TripTypeDropdown from "@/components/TripTypeDropdown";
+import { City } from "@/model/City";
+import { Flight } from "@/model/Flight";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  ActivityIndicator,
+  Button,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 type FormValues = {
-  tripType: 'oneway' | 'roundtrip';
-  from: string;
-  to: string;
+  tripType: "oneway" | "roundtrip";
+  from: City | null;
+  to: City | null;
   departDate: Date;
   returnDate: Date;
 };
@@ -25,9 +34,9 @@ export default function Page() {
     watch,
   } = useForm<FormValues>({
     defaultValues: {
-      tripType: 'oneway',
-      from: '',
-      to: '',
+      tripType: "oneway",
+      from: null,
+      to: null,
       departDate: currentDate,
       returnDate: tomorrow,
     },
@@ -45,7 +54,7 @@ export default function Page() {
     try {
       // fetch logic here
     } catch (err) {
-      setError('Failed to fetch flights.');
+      setError("Failed to fetch flights.");
     } finally {
       setLoading(false);
     }
@@ -53,9 +62,15 @@ export default function Page() {
 
   const renderFlight = ({ item }: { item: Flight }) => (
     <View style={styles.flightCard}>
-      <Text style={styles.airline}>{item.airline} - {item.flightNumber}</Text>
-      <Text style={styles.route}>From {item.origin} → {item.destination}</Text>
-      <Text>{item.departureTime} - {item.arrivalTime}</Text>
+      <Text style={styles.airline}>
+        {item.airline} - {item.flightNumber}
+      </Text>
+      <Text style={styles.route}>
+        From {item.origin} → {item.destination}
+      </Text>
+      <Text>
+        {item.departureTime} - {item.arrivalTime}
+      </Text>
       <Text style={styles.price}>{item.price}</Text>
     </View>
   );
@@ -78,18 +93,13 @@ export default function Page() {
           <TripTypeDropdown value={value} onChange={onChange} />
         )}
       />
-    
+
       <Controller
         control={control}
         name="from"
         rules={{ required: "Origin is required" }}
         render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="From (e.g. MNL)"
-            style={styles.input}
-            value={value}
-            onChangeText={onChange}
-          />
+          <LocationAutocomplete label={"Origin"} onSelect={onChange} />
         )}
       />
       {errors.from && <Text style={styles.error}>{errors.from.message}</Text>}
@@ -99,37 +109,41 @@ export default function Page() {
         name="to"
         rules={{ required: "Destination is required" }}
         render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="To (e.g. CEB)"
-            style={styles.input}
-            value={value}
-            onChangeText={onChange}
-          />
+          <LocationAutocomplete label={"Destination"} onSelect={onChange} />
         )}
       />
       {errors.to && <Text style={styles.error}>{errors.to.message}</Text>}
-      <View style={{ flexDirection: "row", justifyContent:"space-between"}}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <Controller
           control={control}
           name="departDate"
           rules={{ required: "Departure date is required" }}
           render={({ field: { value, onChange } }) => (
-            <DateInput label="Departure Date" value={value} onChange={onChange} />
+            <DateInput
+              label="Departure Date"
+              value={value}
+              onChange={onChange}
+              required
+            />
           )}
         />
-        {errors.departDate && <Text style={styles.error}>{errors.departDate.message}</Text>}
+        {errors.departDate && (
+          <Text style={styles.error}>{errors.departDate.message}</Text>
+        )}
 
         <Controller
           control={control}
           name="returnDate"
           render={({ field: { value, onChange } }) => (
-            <DateInput label="Return Date (optional)" value={value} onChange={onChange} />
+            <DateInput label="Return Date" value={value} onChange={onChange} />
           )}
         />
-        {errors.returnDate && <Text style={styles.error}>{errors.returnDate.message}</Text>}
+        {errors.returnDate && (
+          <Text style={styles.error}>{errors.returnDate.message}</Text>
+        )}
       </View>
-      
-      <Button 
+
+      <Button
         title="Search"
         onPress={handleSubmit(onSubmit)}
         disabled={!isFormComplete || loading}
@@ -153,34 +167,34 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 50,
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   heading: {
     fontSize: 24,
     marginBottom: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
     padding: 10,
     marginVertical: 6,
     borderRadius: 6,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
   },
   error: {
-    color: 'red',
+    color: "red",
     marginTop: 10,
   },
   flightCard: {
     padding: 14,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   airline: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 16,
     marginBottom: 4,
   },
@@ -189,7 +203,7 @@ const styles = StyleSheet.create({
   },
   price: {
     marginTop: 6,
-    fontWeight: 'bold',
-    color: '#007BFF',
+    fontWeight: "bold",
+    color: "#007BFF",
   },
 });

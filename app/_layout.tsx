@@ -1,18 +1,22 @@
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
+import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#000000',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}>
-      <Stack.Screen name="index" />
-    </Stack>
+    <AutocompleteDropdownContextProvider>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "#000000",
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: "RN Flights" }} />
+      </Stack>
+    </AutocompleteDropdownContextProvider>
   );
 }
