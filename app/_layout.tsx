@@ -1,22 +1,34 @@
+import { AuthProvider } from "@/utils/AuthenticationContext";
 import { Stack } from "expo-router";
-import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
+import { StatusBar } from "expo-status-bar";
 
-export default function RootLayout() {
+export default function ProtectedLayout() {
   return (
-    <AutocompleteDropdownContextProvider>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#000000",
-          },
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-        }}
-      >
-        <Stack.Screen name="index" options={{ title: "RN Flights" }} />
+    <AuthProvider>
+      <StatusBar style={"auto"} />;
+      <Stack>
+        <Stack.Screen
+          name="login"
+          options={{
+            headerShown: false,
+            animation: "none",
+          }}
+        />
+        <Stack.Screen
+          name="register"
+          options={{
+            headerShown: false,
+            animation: "none",
+          }}
+        />
+        <Stack.Screen
+          name="(protected)"
+          options={{
+            headerShown: false,
+            animation: "none",
+          }}
+        />
       </Stack>
-    </AutocompleteDropdownContextProvider>
+    </AuthProvider>
   );
 }

@@ -133,8 +133,7 @@ export default function Page() {
       {errors.to && <Text style={styles.error}>{errors.to.message}</Text>}
       <View
         style={{
-          flexDirection: "row",
-          justifyContent: isRoundTrip ? "space-between" : "center",
+          justifyContent:  "center",
         }}
       >
         <Controller

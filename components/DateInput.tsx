@@ -1,6 +1,6 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Text, View, Pressable, Platform } from "react-native";
 
 interface Props {
   label: string;
@@ -18,23 +18,40 @@ const DateInput: React.FC<Props> = ({
   const [showPicker, setShowPicker] = useState(false);
 
   const handleChange = (_: any, selectedDate?: Date) => {
-    if (!selectedDate) return;
-    onChange(selectedDate);
+    setShowPicker(false); // always hide after selection or cancel
+
+    if (selectedDate) {
+      onChange(selectedDate);
+    }
   };
 
   return (
-    <View style={{ marginVertical: 8, alignItems: "center" }}>
+    <View style={{ marginVertical: 8 }}>
       <Text style={{ marginBottom: 4 }}>
         {label}
         {required && <Text style={{ color: "red" }}>*</Text>}
       </Text>
-      <DateTimePicker
-        value={value}
-        mode="date"
-        display="default"
-        minimumDate={value}
-        onChange={handleChange}
-      />
+
+      <Pressable
+        style={{
+          borderWidth: 1,
+          padding: 12,
+          borderRadius: 6,
+          borderColor: "#ccc",
+        }}
+        onPress={() => setShowPicker(!showPicker)}
+      >
+        <Text>{value.toDateString()}</Text>
+      </Pressable>
+
+      {showPicker && (
+        <DateTimePicker
+          value={value}
+          mode="date"
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={handleChange}
+        />
+      )}
     </View>
   );
 };
