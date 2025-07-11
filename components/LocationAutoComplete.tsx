@@ -18,8 +18,8 @@ export default function LocationAutocomplete({ label, onSelect }: Props) {
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState(query);
-  const dataSet: AutocompleteDropdownItem[] = cities.map((city) => ({
-    id: city.address.stateCode,
+  const dataSet: AutocompleteDropdownItem[] = cities.map((city, index) => ({
+    id: `${city.address.stateCode}-${index}`,
     title: `${city.name} - (${city.iataCode || city.address.stateCode})`,
   }));
 
@@ -55,7 +55,7 @@ export default function LocationAutocomplete({ label, onSelect }: Props) {
         }}
         onSelectItem={(item) => {
           if (!item) return;
-          const city = cities.find((city) => city.address.stateCode == item.id);
+          const city = cities.find((city, index) => `${city.address.stateCode}-${index}` == item.id);
           if (!city) return;
           onSelect(city);
         }}

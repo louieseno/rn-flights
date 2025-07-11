@@ -13,7 +13,6 @@ type Props = {
 const flightCache = new Map<string, Flight>();
 
 const useFetchFlights = () => {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
@@ -44,7 +43,6 @@ const useFetchFlights = () => {
 
     const controller = new AbortController();
     controllerRef.current = controller;
-    setLoading(true);
 
     try {
       const response = await axios.get(
@@ -78,9 +76,7 @@ const useFetchFlights = () => {
       if (axios.isCancel(err)) return;
       console.error("Error fetching flights:", err);
       setError("Failed to fetch flights.");
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   const cancelRequest = () => {
@@ -88,8 +84,6 @@ const useFetchFlights = () => {
   };
 
   return {
-    loading,
-    setLoading,
     error,
     setError,
     fetchFlights,

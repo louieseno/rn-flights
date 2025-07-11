@@ -54,10 +54,12 @@ export default function Page() {
   const isFormComplete = tripType && from && to && departDate;
   const isRoundTrip = tripType == "Round Trip";
 
-  const { loading, error, fetchFlights } = useFetchFlights();
+  const [loading, setLoading] = useState(false);
+  const { error, fetchFlights } = useFetchFlights();
   const [allFlights, setAllFlights] = useState<Flight | null>(null);
 
   const onSubmit = async (_: FormValues) => {
+    setLoading(true);
     const departureIds = from?.relationships.map((rel) => rel.id) || [];
     const arrivalIds = to?.relationships.map((rel) => rel.id) || [];
 
@@ -101,8 +103,9 @@ export default function Page() {
     };
 
     setAllFlights(mergedFlights);
+    setLoading(false);
   };
-
+ 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.heading}>Search Flights</Text>
@@ -144,6 +147,7 @@ export default function Page() {
             <DateInput
               label="Departure Date"
               value={value}
+              minimumDate={currentDate}
               onChange={onChange}
               required
             />
@@ -162,6 +166,7 @@ export default function Page() {
                 <DateInput
                   label="Return Date"
                   value={value}
+                  minimumDate={departDate}
                   onChange={onChange}
                 />
               )}

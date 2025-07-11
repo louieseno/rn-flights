@@ -5,6 +5,8 @@ import { Text, View, Pressable, Platform } from "react-native";
 interface Props {
   label: string;
   value: Date;
+  minimumDate?: Date;
+  maximumDate?: Date;
   required?: boolean;
   onChange: (date: Date) => void;
 }
@@ -12,6 +14,8 @@ interface Props {
 const DateInput: React.FC<Props> = ({
   label,
   value,
+  minimumDate,
+  maximumDate,
   required = false,
   onChange,
 }) => {
@@ -47,6 +51,8 @@ const DateInput: React.FC<Props> = ({
       {showPicker && (
         <DateTimePicker
           value={value}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
           mode="date"
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={handleChange}

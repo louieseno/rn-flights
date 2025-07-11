@@ -13,7 +13,7 @@ export default function ProtectedLayout() {
             headerShown: false,
             animation: "none",
           }}
-        />
+        /> 
         <Stack.Screen
           name="register"
           options={{
