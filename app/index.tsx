@@ -1,21 +1,23 @@
 import DateInput from "@/components/DateInput";
 import LocationAutocomplete from "@/components/LocationAutoComplete";
+import RenderFlight from "@/components/RenderFlight";
 import TripTypeDropdown from "@/components/TripTypeDropdown";
+import useFetchFlights from "@/hooks/useFetchFlights";
 import { City } from "@/model/City";
-import { Flight } from "@/model/Flight";
+import { Flight, Itinerary } from "@/model/Flight";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Button,
-  FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
 type FormValues = {
-  tripType: "oneway" | "roundtrip";
+  tripType: "One Way" | "Round Trip";
   from: City | null;
   to: City | null;
   departDate: Date;
@@ -34,7 +36,7 @@ export default function Page() {
     watch,
   } = useForm<FormValues>({
     defaultValues: {
-      tripType: "oneway",
+      tripType: "Round Trip",
       from: null,
       to: null,
       departDate: currentDate,
@@ -42,58 +44,75 @@ export default function Page() {
     },
   });
 
-  const [flights, setFlights] = useState<Flight[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const onSubmit = async (data: FormValues) => {
-    setError(null);
-    setLoading(true);
-    setFlights([]);
-
-    try {
-      // fetch logic here
-    } catch (err) {
-      setError("Failed to fetch flights.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderFlight = ({ item }: { item: Flight }) => (
-    <View style={styles.flightCard}>
-      <Text style={styles.airline}>
-        {item.airline} - {item.flightNumber}
-      </Text>
-      <Text style={styles.route}>
-        From {item.origin} → {item.destination}
-      </Text>
-      <Text>
-        {item.departureTime} - {item.arrivalTime}
-      </Text>
-      <Text style={styles.price}>{item.price}</Text>
-    </View>
-  );
-
   // Watch field values
   const tripType = watch("tripType");
   const from = watch("from");
   const to = watch("to");
   const departDate = watch("departDate");
+  const returnDate = watch("returnDate");
 
   const isFormComplete = tripType && from && to && departDate;
+  const isRoundTrip = tripType == "Round Trip";
+
+  const { loading, error, fetchFlights } = useFetchFlights();
+  const [allFlights, setAllFlights] = useState<Flight | null>(null);
+
+  const onSubmit = async (_: FormValues) => {
+    const departureIds = from?.relationships.map((rel) => rel.id) || [];
+    const arrivalIds = to?.relationships.map((rel) => rel.id) || [];
+
+    const combinations = departureIds.flatMap((dep) =>
+      arrivalIds.map((arr) => ({ dep, arr }))
+    );
+
+    const departDateStr = departDate.toISOString().split("T")[0];
+    const returnDateStr = isRoundTrip
+      ? returnDate?.toISOString().split("T")[0]
+      : undefined;
+
+    const flightPromises = combinations.map(({ dep, arr }) =>
+      fetchFlights({
+        departureId: dep,
+        arrivalId: arr,
+        tripType,
+        departDate: departDateStr,
+        returnDate: returnDateStr,
+      })
+    );
+
+    const results = await Promise.allSettled(flightPromises);
+
+    const allTopFlights: Itinerary[] = [];
+    const allOtherFlights: Itinerary[] = [];
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value) {
+        const flight: Flight = result.value;
+        allTopFlights.push(...(flight.itineraries.topFlights || []));
+        allOtherFlights.push(...(flight.itineraries.otherFlights || []));
+      }
+    }
+
+    const mergedFlights: Flight = {
+      itineraries: {
+        topFlights: allTopFlights,
+        otherFlights: allOtherFlights,
+      },
+    };
+
+    setAllFlights(mergedFlights);
+  };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.heading}>Search Flights</Text>
       <Controller
         control={control}
         name="tripType"
         render={({ field: { onChange, value } }) => (
-          <TripTypeDropdown value={value} onChange={onChange} />
+          <TripTypeDropdown onChange={onChange} />
         )}
       />
-
       <Controller
         control={control}
         name="from"
@@ -103,7 +122,6 @@ export default function Page() {
         )}
       />
       {errors.from && <Text style={styles.error}>{errors.from.message}</Text>}
-
       <Controller
         control={control}
         name="to"
@@ -113,7 +131,12 @@ export default function Page() {
         )}
       />
       {errors.to && <Text style={styles.error}>{errors.to.message}</Text>}
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: isRoundTrip ? "space-between" : "center",
+        }}
+      >
         <Controller
           control={control}
           name="departDate"
@@ -131,34 +154,35 @@ export default function Page() {
           <Text style={styles.error}>{errors.departDate.message}</Text>
         )}
 
-        <Controller
-          control={control}
-          name="returnDate"
-          render={({ field: { value, onChange } }) => (
-            <DateInput label="Return Date" value={value} onChange={onChange} />
-          )}
-        />
-        {errors.returnDate && (
-          <Text style={styles.error}>{errors.returnDate.message}</Text>
+        {isRoundTrip && (
+          <>
+            <Controller
+              control={control}
+              name="returnDate"
+              render={({ field: { value, onChange } }) => (
+                <DateInput
+                  label="Return Date"
+                  value={value}
+                  onChange={onChange}
+                />
+              )}
+            />
+            {errors.returnDate && (
+              <Text style={styles.error}>{errors.returnDate.message}</Text>
+            )}
+          </>
         )}
       </View>
-
       <Button
         title="Search"
         onPress={handleSubmit(onSubmit)}
         disabled={!isFormComplete || loading}
       />
-
       {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <FlatList
-        data={flights}
-        renderItem={renderFlight}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: 16 }}
-      />
-    </View>
+      <RenderFlight item={allFlights} />
+    </ScrollView>
   );
 }
 

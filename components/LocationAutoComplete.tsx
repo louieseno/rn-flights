@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { useFetchCities } from "@/app/hooks/useFetchCities";
+import useFetchCities from "@/hooks/useFetchCities";
 import { City } from "@/model/City";
 import {
   AutocompleteDropdown,
@@ -10,17 +10,17 @@ import {
 
 type Props = {
   label: string;
-  onSelect: (city: City) => void;
+  onSelect: (value: City | null) => void;
 };
 
 export default function LocationAutocomplete({ label, onSelect }: Props) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<City[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState(query);
-  const dataSet: AutocompleteDropdownItem[] = results.map((result) => ({
-    id: result.id.toString(),
-    title: `${result.city}, ${result.country}`,
+  const dataSet: AutocompleteDropdownItem[] = cities.map((city) => ({
+    id: city.address.stateCode,
+    title: `${city.name} - (${city.iataCode || city.address.stateCode})`,
   }));
 
   // Debounce input
@@ -29,8 +29,12 @@ export default function LocationAutocomplete({ label, onSelect }: Props) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Fetch Cities
-  useFetchCities({ debouncedQuery, setLoading, setResults });
+  // Fetch Cities and Airports
+  useFetchCities({
+    debouncedQuery,
+    setLoading,
+    setCities,
+  });
 
   return (
     <View style={styles.container}>
@@ -45,15 +49,15 @@ export default function LocationAutocomplete({ label, onSelect }: Props) {
         closeOnSubmit={false}
         onChangeText={setQuery}
         emptyResultText={`Search ${label}`}
+        onClear={() => {
+          onSelect(null);
+          setCities([]);
+        }}
         onSelectItem={(item) => {
           if (!item) return;
-          const city = results.find(
-            (result) => result.id.toString() == item.id
-          );
+          const city = cities.find((city) => city.address.stateCode == item.id);
           if (!city) return;
           onSelect(city);
-          setQuery(`${city.city}, ${city.country}`);
-          setResults([]);
         }}
         dataSet={dataSet}
       />

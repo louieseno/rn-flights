@@ -2,11 +2,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 
 type Props = {
-  value: "oneway" | "roundtrip";
-  onChange: (value: "oneway" | "roundtrip") => void;
+  onChange: (value: "One Way" | "Round Trip") => void;
 };
 
-export default function TripTypeDropdown({ value, onChange }: Props) {
+const data = [
+  { value: "One Way", key: "One Way" },
+  { value: "Round Trip", key: "Round Trip" },
+];
+export default function TripTypeDropdown({ onChange }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>
@@ -14,11 +17,9 @@ export default function TripTypeDropdown({ value, onChange }: Props) {
         <Text style={{ color: "red" }}>*</Text>
       </Text>
       <SelectList
+        defaultOption={{ value: "Round Trip", key: "Round Trip" }}
         setSelected={onChange}
-        data={[
-          { label: "One Way", value: "One way" },
-          { label: "Round Trip", value: "Round Trip" },
-        ]}
+        data={data}
       />
     </View>
   );

@@ -1,6 +1,6 @@
-export interface City {
+export interface Airport {
   name: string;
-  iataCode?: string;
+  iataCode: string;
   address: {
     countryCode: string;
     stateCode: string;
@@ -9,5 +9,4 @@ export interface City {
     latitute: number;
     longtitude: number;
   };
-  relationships: { id: string; type: string; href: string }[];
 }
